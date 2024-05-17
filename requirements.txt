@@ -7,3 +7,4 @@ scikit-learn
 imbalanced-learn
 shap
 joblib
+requests
