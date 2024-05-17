@@ -21,7 +21,16 @@ app = Flask(__name__)
 Bootstrap(app)
 
 # 加载数据并处理
-data = pd.read_csv("C:/Users/user/Desktop/Python/ML/master/KDlast.csv", encoding='gbk')
+import pandas as pd
+import requests
+from io import StringIO
+
+# 使用 requests.get 方法获取 GitHub 中的 CSV 文件
+url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/KDlast.csv'
+content = requests.get(url).content
+
+# 将获取的内容转换为 pandas DataFrame
+data = pd.read_csv(StringIO(content.decode('utf-8')), encoding='gbk')
 
 X = data.drop('PCAA', axis=1)
 y = data['PCAA']
