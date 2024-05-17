@@ -32,7 +32,7 @@ content = requests.get(url).content
 # 将获取的内容转换为 pandas DataFrame
 data = pd.read_csv(StringIO(content.decode('utf-8')), encoding='gbk')
 
-X = data.drop('PCAA', axis=1)
+X = data.drop('PCAA', axis=1,inplace=True)
 y = data['PCAA']
 
 # 特征标准化
