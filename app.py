@@ -16,25 +16,35 @@ from sklearn.feature_selection import RFECV
 import shap
 import joblib  # 用于持久化模型
 from flask_bootstrap import Bootstrap
+import requests
+from io import StringIO
 
 app = Flask(__name__)
 Bootstrap(app)
 
 # 加载数据并处理
-import pandas as pd
-import requests
-from io import StringIO
+url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast.csv'
+response = requests.get(url)
+content = response.content
 
-# 使用 requests.get 方法获取 GitHub 中的 CSV 文件
-url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/KDlast.csv'
-content = requests.get(url).content
+# 查看获取的内容是否正常
+print("Response status code:", response.status_code)
+print("Content snippet:", content[:500])  # 检查前500个字符
 
-# 将获取的内容转换为 pandas DataFrame
-data = pd.read_csv(StringIO(content.decode('utf-8')), encoding='gbk')
+data = pd.read_csv(StringIO(content.decode('gbk')))
+print("DataFrame columns:", data.columns)
 
-X = data.drop('PCAA', axis=1,inplace=True)
-y = data['PCAA']
+# 确保 'PCAA' 列存在
+if 'PCAA' in data.columns:
+    X = data.drop(columns=['PCAA'])
+    y = data['PCAA']
+    print("X head:", X.head())
+    print("y head:", y.head())
+else:
+    print("'PCAA' column not found in DataFrame")
+    raise KeyError("'PCAA' column not found in DataFrame")
 
+# 剩余代码继续处理数据...
 # 特征标准化
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
@@ -45,6 +55,8 @@ X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
 
 # 训练集测试集分割
 X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
+
+# XGBoost classfier
 xgb_classifier = XGBClassifier()
 
 # Feature selection with RFECV
@@ -122,7 +134,6 @@ def generate_annotations(data):
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
-    # 生成注释并修改数据
     annotations = generate_annotations(data)
     input_dict = {feature: [float(data[feature])] for feature in selected_columns}
 
@@ -158,4 +169,4 @@ def predict():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)    
