@@ -44,7 +44,6 @@ else:
     print("'PCAA' column not found in DataFrame")
     raise KeyError("'PCAA' column not found in DataFrame")
 
-# 剩余代码继续处理数据...
 # 特征标准化
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
@@ -64,7 +63,7 @@ selector = RFECV(estimator=xgb_classifier, step=1, cv=5, scoring='accuracy', min
 X_train_selected = selector.fit_transform(X_train, y_train)
 X_test_selected = selector.transform(X_test)
 
-# Grid search parameters for XGBoost
+# 参数设置
 param_grid = {
     'n_estimators': [300],
     'learning_rate': [0.05],
@@ -120,11 +119,11 @@ def generate_annotations(data):
     age_annotation = 1 if float(data['age']) < 1 else 0
     fever_annotation = 0 if float(data['DF']) <= 10 else 1
     ivig_annotation = 0 if 5 <= float(data['IGT']) <= 7 else 1
-    
+
     data['age'] = age_annotation  # 修改原始数据
     data['DF'] = fever_annotation  # 修改原始数据
     data['IGT'] = ivig_annotation  # 修改原始数据
-    
+
     return {
         "age_annotation": f"Age ≤1 y, {age_annotation}",
         "fever_annotation": f"Fever time ≤10 d, {fever_annotation}",
@@ -143,14 +142,11 @@ def predict():
     input_data_scaled = scaler.transform(input_df)
     input_data_selected = selector.transform(input_data_scaled)
 
-    # 预测
     prediction_proba = model.predict_proba(input_data_selected)[:, 1][0]
     prediction = round(prediction_proba * 100, 2)
 
-    # 计算SHAP值
     shap_values = explainer(pd.DataFrame(input_data_selected, columns=selected_columns))
 
-    # 生成建议
     advice = "Please refer to the medical guidelines."
     if prediction_proba < 0.20:
         advice = "Low probability. Regular monitoring recommended."
@@ -167,6 +163,3 @@ def predict():
         'shap_values': shap_values.values[0].tolist(),
         'annotations': annotations  # 返回注释
     })
-
-if __name__ == '__main__':
-    app.run(debug=True)    
