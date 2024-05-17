@@ -1,0 +1,40 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu May 16 22:05:58 2024
+
+@author: user
+"""
+
+body {
+    background-color: #e9f7fa;
+}
+.container {
+    max-width: 800px;
+    margin-top: 50px;
+}
+.jumbotron {
+    background-color: #92d2d6;
+    color: white;
+}
+.form-control {
+    background-color: #f8f9fa;
+}
+.btn-primary {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}
+.btn-primary:hover {
+    background-color: #45a049;
+}
+.card {
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 12px #aaa;
+}
+.alert-info {
+    background-color: #d9edf7;
+    color: #31708f;
+}
+.alert-warning {
+    background-color: #fcf8e3;
+    color: #8a6d3b;
+}
