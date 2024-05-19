@@ -105,10 +105,9 @@ annotations_dict = {
     "age": "Age (y):",
     "PLT": "Platelet count (10^9/L):",
     "ALB": "Albumin (g/L):",
-    "IL-6": "Interleukin-6 (pg/mL):",
     "WBC": "White blood cell count (10^9/L):",
     "HB": "Hemoglobin (g/dL):",
-    "ALT": "Alanine Transaminase (U/L):"
+    "AST": "Aspartate aminotransferase (U/L):"
 }
 
 @app.route('/')
