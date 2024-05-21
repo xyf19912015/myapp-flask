@@ -40,9 +40,6 @@ Created on Thu May 16 17:00:16 2024
             <div class="card-header">SHAP Values:</div>
             <div class="card-body">
                 <pre id="shap_values"></pre>
-                <p id="age_annotation"></p>
-                <p id="fever_annotation"></p>
-                <p id="ivig_annotation"></p>
             </div>
         </div>
     </div>
@@ -63,12 +60,3 @@ Created on Thu May 16 17:00:16 2024
             success: function(response) {
                 $('#probability').text(`Predicted probability: ${response.probability}%`);
                 $('#advice').text(response.advice);
-                $('#optimal_threshold').text(`Optimal threshold: ${response.optimal_threshold}`);
-                $('#shap_values').text(JSON.stringify(response.shap_values, null, 2));
-                $('#result').removeClass('d-none');
-            }
-        });
-    });
-</script>
-</body>
-</html>
