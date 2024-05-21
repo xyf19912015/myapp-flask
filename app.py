@@ -18,6 +18,7 @@ import joblib  # 用于持久化模型
 from flask_bootstrap import Bootstrap
 import requests
 from io import StringIO
+from sklearn.metrics import roc_curve
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -55,7 +56,7 @@ X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
 # 训练集测试集分割
 X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
 
-# XGBoost classfier
+# XGBoost classifier
 xgb_classifier = XGBClassifier()
 
 # Feature selection with RFECV
@@ -114,25 +115,15 @@ annotations_dict = {
 def index():
     return render_template('index.html', features=selected_columns.tolist(), annotations=annotations_dict)
 
-def generate_annotations(data):
-    age_annotation = 1 if float(data['age']) < 1 else 0
-    fever_annotation = 0 if float(data['DF']) <= 10 else 1
-    ivig_annotation = 0 if 5 <= float(data['IGT']) <= 7 else 1
-
-    data['age'] = age_annotation  # 修改原始数据
-    data['DF'] = fever_annotation  # 修改原始数据
-    data['IGT'] = ivig_annotation  # 修改原始数据
-
-    return {
-        "age_annotation": f"Age ≤1 y, {age_annotation}",
-        "fever_annotation": f"Fever time ≤10 d, {fever_annotation}",
-        "ivig_annotation": f"Initial IVIG treatment was ≥5 d and ≤7 d, {ivig_annotation}"
-    }
+def calculate_optimal_threshold(y_true, y_proba):
+    fpr, tpr, thresholds = roc_curve(y_true, y_proba)
+    youden_index = tpr - fpr
+    optimal_threshold = thresholds[np.argmax(youden_index)]
+    return optimal_threshold
 
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
-    annotations = generate_annotations(data)
     input_dict = {feature: [float(data[feature])] for feature in selected_columns}
 
     input_df = pd.DataFrame.from_dict(input_dict)
@@ -146,19 +137,18 @@ def predict():
 
     shap_values = explainer(pd.DataFrame(input_data_selected, columns=selected_columns))
 
-    advice = "Please refer to the medical guidelines."
-    if prediction_proba < 0.20:
-        advice = "Low probability. Regular monitoring recommended."
-    elif 0.20 <= prediction_proba < 0.50:
-        advice = "Moderate probability. Consider additional tests."
-    elif 0.50 <= prediction_proba < 0.80:
-        advice = "High probability. Further clinical evaluation and potential intervention needed."
+    optimal_threshold = calculate_optimal_threshold(y_test, model.predict_proba(X_test_selected)[:, 1])
+    if prediction_proba >= optimal_threshold:
+        advice = "High risk. Immediate clinical intervention required."
     else:
-        advice = "Very high probability. Immediate clinical intervention required."
+        advice = "Low risk. Regular monitoring recommended."
 
     return jsonify({
         'probability': prediction,
         'advice': advice,
+        'optimal_threshold': optimal_threshold,  # 输出最优阈值
         'shap_values': shap_values.values[0].tolist(),
-        'annotations': annotations  # 返回注释
     })
+
+if __name__ == '__main__':
+    app.run(debug=True)
