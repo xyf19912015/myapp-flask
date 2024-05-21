@@ -24,7 +24,7 @@ app = Flask(__name__)
 Bootstrap(app)
 
 # 加载数据并处理
-url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast.csv'
+url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast2.csv'
 response = requests.get(url)
 content = response.content
 
