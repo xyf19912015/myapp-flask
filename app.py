@@ -24,7 +24,7 @@ app = Flask(__name__)
 Bootstrap(app)
 
 # 加载数据并处理
-url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast2.csv'
+url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast.csv'
 response = requests.get(url)
 content = response.content
 
@@ -103,7 +103,7 @@ explainer = shap.Explainer(model, X_train_selected_df)
 annotations_dict = {
     "DF": "Duration of fever (d):",
     "IGT": "Initial IVIG treatment time (d):",
-    "age": "Age (m):",
+    "age": "Age (y):",
     "PLT": "Platelet count (10^9/L):",
     "ALB": "Albumin (g/L):",
     "WBC": "White blood cell count (10^9/L):",
@@ -133,7 +133,7 @@ def predict():
     input_data_selected = selector.transform(input_data_scaled)
 
     prediction_proba = model.predict_proba(input_data_selected)[:, 1][0]
-    prediction = round(prediction_proba * 100, 2)
+    prediction = round(float(prediction_proba) * 100, 2)
 
     shap_values = explainer(pd.DataFrame(input_data_selected, columns=selected_columns))
 
