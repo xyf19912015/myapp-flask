@@ -35,6 +35,7 @@ Created on Thu May 16 17:00:16 2024
         <h4 class="text-center">Prediction result will be shown here.</h4>
         <div class="alert alert-info" role="alert" id="probability"></div>
         <div class="alert alert-warning" role="alert" id="advice"></div>
+        <div class="alert alert-secondary" role="alert" id="optimal_threshold"></div>
         <div class="card mt-3">
             <div class="card-header">SHAP Values:</div>
             <div class="card-body">
@@ -62,10 +63,8 @@ Created on Thu May 16 17:00:16 2024
             success: function(response) {
                 $('#probability').text(`Predicted probability: ${response.probability}%`);
                 $('#advice').text(response.advice);
+                $('#optimal_threshold').text(`Optimal threshold: ${response.optimal_threshold}`);
                 $('#shap_values').text(JSON.stringify(response.shap_values, null, 2));
-                $('#age_annotation').text(response.annotations.age_annotation);
-                $('#fever_annotation').text(response.annotations.fever_annotation);
-                $('#ivig_annotation').text(response.annotations.ivig_annotation);
                 $('#result').removeClass('d-none');
             }
         });
