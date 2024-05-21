@@ -24,7 +24,7 @@ app = Flask(__name__)
 Bootstrap(app)
 
 # 加载数据并处理
-url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast2.csv'
+url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast.csv'
 response = requests.get(url)
 content = response.content
 
@@ -103,7 +103,7 @@ explainer = shap.Explainer(model, X_train_selected_df)
 annotations_dict = {
     "DF": "Duration of fever (d):",
     "IGT": "Initial IVIG treatment time (d):",
-    "age": "Age (m):",
+    "age": "Age (y):",
     "PLT": "Platelet count (10^9/L):",
     "ALB": "Albumin (g/L):",
     "WBC": "White blood cell count (10^9/L):",
@@ -124,7 +124,7 @@ def calculate_optimal_threshold(y_true, y_proba):
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
-    input_dict = {feature: [float(data[feature])] for feature in selected_columns}
+    input_dict = {feature: [float(data.get(feature, 0))] for feature in selected_columns}
 
     input_df = pd.DataFrame.from_dict(input_dict)
     input_df = input_df[selected_columns]
