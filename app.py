@@ -103,7 +103,7 @@ explainer = shap.Explainer(model, X_train_selected_df)
 annotations_dict = {
     "DF": "Duration of fever (d):",
     "IGT": "Initial IVIG treatment time (d):",
-    "age": "Age (y):",
+    "age": "Age (m):",
     "PLT": "Platelet count (10^9/L):",
     "ALB": "Albumin (g/L):",
     "WBC": "White blood cell count (10^9/L):",
