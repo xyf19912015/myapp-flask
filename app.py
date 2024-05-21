@@ -137,7 +137,7 @@ def predict():
 
     shap_values = explainer(pd.DataFrame(input_data_selected, columns=selected_columns))
 
-    optimal_threshold = calculate_optimal_threshold(y_test, model.predict_proba(X_test_selected)[:, 1])
+    optimal_threshold = float(calculate_optimal_threshold(y_test, model.predict_proba(X_test_selected)[:, 1]))
     if prediction_proba >= optimal_threshold:
         advice = "High risk. Immediate clinical intervention required."
     else:
