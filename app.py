@@ -53,8 +53,20 @@ X_scaled = scaler.fit_transform(X)
 smote = SMOTE()
 X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
 
+# 数据增强
+def augment_data(df, n_samples=10):
+    augmented = df.copy()
+    for _ in range(n_samples):
+        noise = np.random.normal(0, 0.1, df.shape)
+        new_data = df + noise
+        augmented = pd.concat([augmented, new_data], ignore_index=True)
+    return augmented
+
+X_augmented = augment_data(pd.DataFrame(X_resampled))
+y_augmented = np.tile(y_resampled, (11,))  # 原始数据 + 10倍增强数据
+
 # 训练集测试集分割
-X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_augmented, y_augmented, test_size=0.2, random_state=42)
 
 # XGBoost classifier
 xgb_classifier = XGBClassifier()
