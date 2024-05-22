@@ -162,4 +162,4 @@ def predict():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8080)  # 将应用程序绑定到8080端口
+    app.run(debug=True)# 
