@@ -14,7 +14,7 @@ from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.feature_selection import RFECV
 import shap
-import joblib  # 用于持久化模型
+import joblib
 from flask_bootstrap import Bootstrap
 import requests
 from io import StringIO
@@ -28,10 +28,6 @@ url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast2.
 response = requests.get(url)
 content = response.content
 
-# 查看获取的内容是否正常
-print("Response status code:", response.status_code)
-print("Content snippet:", content[:500])  # 检查前500个字符
-
 data = pd.read_csv(StringIO(content.decode('gbk')))
 print("DataFrame columns:", data.columns)
 
@@ -39,10 +35,7 @@ print("DataFrame columns:", data.columns)
 if 'PCAA' in data.columns:
     X = data.drop(columns=['PCAA'])
     y = data['PCAA']
-    print("X head:", X.head())
-    print("y head:", y.head())
 else:
-    print("'PCAA' column not found in DataFrame")
     raise KeyError("'PCAA' column not found in DataFrame")
 
 # 特征标准化
@@ -63,7 +56,7 @@ def augment_data(df, n_samples=10):
     return augmented
 
 X_augmented = augment_data(pd.DataFrame(X_resampled))
-y_augmented = np.tile(y_resampled, (11,))  # 原始数据 + 10倍增强数据
+y_augmented = np.tile(y_resampled, (11,))
 
 # 训练集测试集分割
 X_train, X_test, y_train, y_test = train_test_split(X_augmented, y_augmented, test_size=0.2, random_state=42)
@@ -77,7 +70,8 @@ X_train_selected = selector.fit_transform(X_train, y_train)
 X_test_selected = selector.transform(X_test)
 
 # 打印选择的特征和被剔除的特征
-print("Selected features:", X.columns[selector.support_])
+selected_columns = X.columns[selector.support_]
+print("Selected features:", selected_columns)
 print("Eliminated features:", X.columns[~selector.support_])
 
 # 参数设置
@@ -97,17 +91,18 @@ grid_search = GridSearchCV(estimator=xgb_classifier, param_grid=param_grid, cv=5
 grid_search.fit(X_train_selected, y_train)
 
 best_xgb = grid_search.best_estimator_
-selected_columns = X.columns[selector.support_]
 
-# 保存模型和Scaler
+# 保存模型、Scaler和选择器
 joblib.dump(best_xgb, 'best_xgb_model.pkl')
 joblib.dump(scaler, 'scaler.pkl')
 joblib.dump(selector, 'selector.pkl')
+joblib.dump(selected_columns, 'selected_columns.pkl')
 
-# 加载保存的模型和Scaler
+# 加载保存的模型、Scaler和选择器
 model = joblib.load('best_xgb_model.pkl')
 scaler = joblib.load('scaler.pkl')
 selector = joblib.load('selector.pkl')
+selected_columns = joblib.load('selected_columns.pkl')
 
 # 转换训练数据选定特征为数据框
 X_train_selected_df = pd.DataFrame(X_train_selected, columns=selected_columns)
@@ -162,9 +157,9 @@ def predict():
     return jsonify({
         'probability': prediction,
         'advice': advice,
-        'optimal_threshold': optimal_threshold,  # 输出最优阈值
+        'optimal_threshold': optimal_threshold,
         'shap_values': shap_values.values[0].tolist(),
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8080)  # 将应用程序绑定到8080端口
