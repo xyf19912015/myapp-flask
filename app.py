@@ -60,9 +60,13 @@ X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, te
 xgb_classifier = XGBClassifier()
 
 # Feature selection with RFECV
-selector = RFECV(estimator=xgb_classifier, step=1, cv=5, scoring='accuracy', min_features_to_select=1)
+selector = RFECV(estimator=xgb_classifier, step=1, cv=5, scoring='accuracy', min_features_to_select=8)
 X_train_selected = selector.fit_transform(X_train, y_train)
 X_test_selected = selector.transform(X_test)
+
+# 打印选择的特征和被剔除的特征
+print("Selected features:", X.columns[selector.support_])
+print("Eliminated features:", X.columns[~selector.support_])
 
 # 参数设置
 param_grid = {
