@@ -13,29 +13,25 @@ from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score, classification_report
 from xgboost import XGBClassifier
-import matplotlib.pyplot as plt
-import itertools
-from scipy import stats
+import requests
 
 app = Flask(__name__)
-Bootstrap(app)
 
 random_state = 42
 
 # 模型训练部分
 def train_model():
-    # 加载数据
-   # 加载数据并处理
-url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast2.csv'
-response = requests.get(url)
-content = response.content
+    # 加载数据并处理
+    url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast2.csv'
+    response = requests.get(url)
+    data = pd.read_csv(pd.compat.StringIO(response.content.decode('utf-8')), encoding='gbk')
 
     # 特征和标签
     X = data.drop('PCAA', axis=1)
     y = data['PCAA']
 
     # 手动指定要使用的特征（根据你的具体需求）
-    selected_features = ['Num of involved CAs', 'Zmax of initial CALs', 'Age', 'DF', 'AST', 'WBC','PLT','HB']
+    selected_features = ['Num of involved CAs', 'Zmax of initial CALs', 'Age', 'DF', 'AST', 'WBC', 'PLT', 'HB']
 
     # 过滤所选特征
     X = X[selected_features]
