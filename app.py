@@ -22,7 +22,7 @@ random_state = 42
 # 模型训练部分
 def train_model():
     # 加载数据并处理
-    url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast2.csv'
+    url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast3.csv'
     response = requests.get(url)
     data = pd.read_csv(pd.compat.StringIO(response.content.decode('utf-8')), encoding='gbk')
 
