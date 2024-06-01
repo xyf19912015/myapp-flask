@@ -1,0 +1,35 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu May 30 17:21:14 2024
+
+@author: user
+"""
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f8ff; }
+        .container { max-width: 600px; margin: 50px auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        h1 { text-align: center; }
+        .result { font-size: 24px; text-align: center; margin-top: 20px; }
+        .home-link { display: block; text-align: center; margin-top: 20px; }
+        .home-link a { text-decoration: none; color: #007bff; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Prediction Result</h1>
+        <div class="result">
+            Probability of Persistent CAA: {{ prediction }}<br>
+            Youden Index: {{ youden_index }}
+        </div>
+        <div class="home-link">
+            <a href="/">Back to Home</a>
+        </div>
+    </div>
+</body>
+</html>
