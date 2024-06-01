@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score, classification_report
 from xgboost import XGBClassifier
 import requests
+import io
 
 app = Flask(__name__)
 
@@ -24,7 +25,7 @@ def train_model():
     # 加载数据并处理
     url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast3.csv'
     response = requests.get(url)
-    data = pd.read_csv(pd.compat.StringIO(response.content.decode('utf-8')), encoding='gbk')
+    data = pd.read_csv(io.StringIO(response.content.decode('utf-8')), encoding='gbk')
 
     # 特征和标签
     X = data.drop('PCAA', axis=1)
