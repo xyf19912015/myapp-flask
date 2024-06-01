@@ -18,13 +18,17 @@ import itertools
 from scipy import stats
 
 app = Flask(__name__)
+Bootstrap(app)
 
 random_state = 42
 
 # 模型训练部分
 def train_model():
     # 加载数据
-    data = pd.read_csv("C:/Users/user/Desktop/Python/ML/master/KDlast3.csv", encoding='gbk')
+   # 加载数据并处理
+url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast2.csv'
+response = requests.get(url)
+content = response.content
 
     # 特征和标签
     X = data.drop('PCAA', axis=1)
