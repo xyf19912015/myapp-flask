@@ -76,12 +76,36 @@ scaler, best_xgb, selected_features, original_columns, y_test, X_test = train_mo
 
 @app.route('/')
 def home():
-    return render_template('index.html', features=selected_features)
+    annotations = {
+        'Num of involved CAs': 'Number of Involved Coronary Arteries, n',
+        'Zmax of initial CALs': 'Zmax of initial CALs',
+        'Age': 'Age of onset, year',
+        'DF': 'Duration of fever, day',
+        'AST': 'Aspartate aminotransferase, U/L',
+        'WBC': 'White blood cell, 10^9/L',
+        'PLT': 'Platelets',
+        'HB': 'Hemoglobin, g/dL'
+    }
+    return render_template('index.html', features=selected_features, annotations=annotations)
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        input_features = [float(request.form[feature]) for feature in selected_features]
+        input_features = []
+        for feature in selected_features:
+            value = float(request.form[feature])
+            if feature == 'Zmax of initial CALs':
+                if value < 2:
+                    value = 0
+                elif 2 <= value < 2.5:
+                    value = 1
+                elif 2.5 <= value < 5:
+                    value = 2
+                elif 5 <= value < 10:
+                    value = 3
+                else:
+                    value = 4
+            input_features.append(value)
     except KeyError as e:
         return f"Error: Missing input for feature: {e.args[0]}"
 
