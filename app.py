@@ -124,10 +124,21 @@ def predict():
     prediction_rounded = round(prediction_proba, 4)
 
     # Calculate Youden's index
-    fpr, tpr, thresholds = roc_curve(y_test, best_xgb.predict_proba(X_test)[:, 1])
+    y_pred_proba = best_xgb.predict_proba(X_test)[:, 1]
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
     youden_index = tpr - fpr
     best_threshold = thresholds[np.argmax(youden_index)]
-    youden_index_value = np.max(youden_index)
+
+    # Apply the best threshold to classify
+    y_pred_test = (y_pred_proba > best_threshold).astype(int)
+
+    # Confusion matrix
+    tn, fp, fn, tp = confusion_matrix(y_test, y_pred_test).ravel()
+
+    # Calculate Youden's Index
+    sensitivity = tp / (tp + fn)
+    specificity = tn / (fp + tn)
+    youden_index_value = sensitivity + specificity - 1
 
     return render_template('result.html', prediction=prediction_rounded, youden_index=youden_index_value)
 
