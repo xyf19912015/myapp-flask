@@ -79,7 +79,7 @@ def home():
     annotations = {
         'Num of involved CAs': 'Number of Involved Coronary Arteries, n',
         'Zmax of initial CALs': 'Zmax of initial CALs',
-        'Age': 'Age of onset, year',
+        'Age': 'Age of onset, years',
         'DF': 'Duration of fever, day',
         'AST': 'Aspartate aminotransferase, U/L',
         'WBC': 'White blood cell, 10^9/L',
