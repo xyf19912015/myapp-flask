@@ -11,14 +11,17 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score, classification_report
+from sklearn.metrics import confusion_matrix, roc_curve
 from xgboost import XGBClassifier
 import requests
 import io
+import random
 
 app = Flask(__name__)
 
 random_state = 42
+random.seed(random_state)
+np.random.seed(random_state)
 
 # 模型训练部分
 def train_model():
