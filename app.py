@@ -9,7 +9,7 @@ from flask import Flask, request, render_template
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from imblearn.over_sampling import SMote
+from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import roc_curve, confusion_matrix
 from xgboost import XGBClassifier
@@ -120,7 +120,6 @@ def predict():
 
     # Prediction
     prediction_proba = best_xgb.predict_proba(input_scaled)[:, 1][0]
-    prediction = best_xgb.predict(input_scaled)[0]
     prediction_rounded = round(prediction_proba, 4)
 
     # Calculate Youden's index
@@ -142,6 +141,9 @@ def predict():
 
     # Determine risk level
     risk = 'high' if prediction_rounded > youden_index_value else 'low'
+
+    # Debugging output
+    print(f"Prediction: {prediction_rounded}, Youden Index: {youden_index_value}, Risk: {risk}")
 
     return render_template('result.html', prediction=prediction_rounded, youden_index=round(youden_index_value, 4), risk=risk)
 
