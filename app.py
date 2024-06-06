@@ -11,7 +11,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import roc_curve, confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score, classification_report
 from xgboost import XGBClassifier
 import requests
 import io
@@ -120,6 +120,7 @@ def predict():
 
     # Prediction
     prediction_proba = best_xgb.predict_proba(input_scaled)[:, 1][0]
+    prediction = best_xgb.predict(input_scaled)[0]
     prediction_rounded = round(prediction_proba, 4)
 
     # Calculate Youden's index
@@ -139,13 +140,7 @@ def predict():
     specificity = tn / (fp + tn)
     youden_index_value = sensitivity + specificity - 1
 
-    # Determine risk level
-    risk = 'high' if prediction_rounded > youden_index_value else 'low'
-
-    # Debugging output
-    print(f"Prediction: {prediction_rounded}, Youden Index: {youden_index_value}, Risk: {risk}")
-
-    return render_template('result.html', prediction=prediction_rounded, youden_index=round(youden_index_value, 4), risk=risk)
+    return render_template('result.html', prediction=prediction_rounded, youden_index=youden_index_value)
 
 if __name__ == '__main__':
     app.run(debug=True)
