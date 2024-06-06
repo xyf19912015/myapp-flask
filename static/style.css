@@ -2,9 +2,6 @@
 """
 Created on Thu May 16 22:05:58 2024
 
-@author: user
-"""
-
 body {
     background-color: #e9f7fa;
 }
@@ -37,4 +34,10 @@ body {
 .alert-warning {
     background-color: #fcf8e3;
     color: #8a6d3b;
+}
+.high-risk {
+    color: red;
+}
+.low-risk {
+    color: green;
 }
