@@ -10,32 +10,31 @@ Created on Thu May 30 17:21:14 2024
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prediction system for KD with persistent CAA</title>
+    <title>Prediction Result</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f0f8ff; }
         .container { max-width: 600px; margin: 50px auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
         h1 { text-align: center; }
-        form { display: flex; flex-wrap: wrap; }
-        .form-group { width: 100%; margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; }
-        input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; padding: 10px; background-color: #007bff; border: none; border-radius: 4px; color: white; font-size: 16px; }
-        .annotation { font-size: 0.9em; color: #555; margin-top: 5px; }
+        .result { font-size: 24px; text-align: center; margin-top: 20px; }
+        .high-risk { color: red; }
+        .low-risk { color: green; }
+        .home-link { display: block; text-align: center; margin-top: 20px; }
+        .home-link a { text-decoration: none; color: #007bff; font-size: 18px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Prediction system for KD with persistent CAA</h1>
-        <form action="/predict" method="post">
-            {% for feature in features %}
-            <div class="form-group">
-                <label for="{{ feature }}">{{ feature }}</label>
-                <input type="text" id="{{ feature }}" name="{{ feature }}" required>
-                <div class="annotation">{{ annotations[feature] }}</div>
-            </div>
-            {% endfor %}
-            <button type="submit">Predict</button>
-        </form>
+        <h1>Prediction Result</h1>
+        <div class="result">
+            Probability of Persistent CAA: {{ prediction }}<br>
+            Youden Index: {{ youden_index }}<br>
+            <span class="{% if risk == 'high' %}high-risk{% else %}low-risk{% endif %}">
+                {% if risk == 'high' %}High{% else %}Low{% endif %} Risk
+            </span>
+        </div>
+        <div class="home-link">
+            <a href="/">Back to Home</a>
+        </div>
     </div>
 </body>
 </html>
