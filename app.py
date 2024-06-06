@@ -42,14 +42,14 @@ def train_model():
     X_scaled = scaler.fit_transform(X)
 
     # 过采样处理不平衡
-    smote = SMOTE(sampling_strategy=0.5)
+    smote = SMOTE(sampling_strategy=0.5, random_state=random_state)
     X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
 
     # 训练集测试集分割
-    X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=random_state)
 
     # 训练模型
-    xgb_classifier = XGBClassifier()
+    xgb_classifier = XGBClassifier(random_state=random_state)
 
     # 使用网格搜索进行超参数优化
     param_grid = {
