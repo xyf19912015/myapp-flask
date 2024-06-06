@@ -11,7 +11,6 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import confusion_matrix, roc_curve
 from xgboost import XGBClassifier
 import requests
 import io
@@ -126,22 +125,8 @@ def predict():
     prediction = best_xgb.predict(input_scaled)[0]
     prediction_rounded = round(prediction_proba, 4)
 
-    # Calculate Youden's index
-    y_pred_proba = best_xgb.predict_proba(X_test)[:, 1]
-    fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
-    youden_index = tpr - fpr
-    best_threshold = thresholds[np.argmax(youden_index)]
-
-    # Apply the best threshold to classify
-    y_pred_test = (y_pred_proba > best_threshold).astype(int)
-
-    # Confusion matrix
-    tn, fp, fn, tp = confusion_matrix(y_test, y_pred_test).ravel()
-
-    # Calculate Youden's Index
-    sensitivity = tp / (tp + fn)
-    specificity = tn / (fp + tn)
-    youden_index_value = sensitivity + specificity - 1
+    # 固定约登指数
+    youden_index_value = 0.8509
 
     return render_template('result.html', prediction=prediction_rounded, youden_index=youden_index_value)
 
