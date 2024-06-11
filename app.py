@@ -5,8 +5,23 @@ Created on Thu May 30 17:19:12 2024
 @author: user
 """
 
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import roc_curve, confusion_matrix
+from flask import Flask, request, render_template
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from imblearn.over_sampling import SMOTE
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import confusion_matrix, roc_curve
+from xgboost import XGBClassifier
+import requests
+import io
+import random
+
+app = Flask(__name__)
+
+random_state = 42
+random.seed(random_state)
+np.random.seed(random_state)
 
 def calculate_youden_index(y_true, y_proba):
     fpr, tpr, thresholds = roc_curve(y_true, y_proba)
@@ -15,6 +30,7 @@ def calculate_youden_index(y_true, y_proba):
     return best_threshold
 
 def cross_validated_youden_index(X, y, model, cv=5):
+    from sklearn.model_selection import StratifiedKFold
     skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
     thresholds = []
     
@@ -29,7 +45,14 @@ def cross_validated_youden_index(X, y, model, cv=5):
     
     return np.mean(thresholds)
 
-# 训练和评估模型
+def select_features(X, y):
+    from sklearn.feature_selection import RFECV
+    xgb_classifier = XGBClassifier(random_state=random_state)
+    rfecv = RFECV(estimator=xgb_classifier, step=1, cv=5, scoring='roc_auc')
+    rfecv.fit(X, y)
+    selected_features = X.columns[rfecv.support_]
+    return selected_features
+
 def train_model():
     url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast3.csv'
     response = requests.get(url)
@@ -72,6 +95,20 @@ def train_model():
 
 scaler, best_xgb, selected_features, original_columns, best_threshold = train_model()
 
+@app.route('/')
+def home():
+    annotations = {
+        'Num of involved CAs': 'Number of Involved Coronary Arteries, n',
+        'Zmax of initial CALs': 'Zmax of initial CALs',
+        'Age': 'Age of onset, years',
+        'DF': 'Duration of fever, day',
+        'AST': 'Aspartate aminotransferase, U/L',
+        'WBC': 'White blood cell, 10^9/L',
+        'PLT': 'Platelets',
+        'HB': 'Hemoglobin, g/dL'
+    }
+    return render_template('index.html', features=selected_features, annotations=annotations)
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -101,10 +138,11 @@ def predict():
     input_scaled = scaler.transform(aligned_input_df[selected_features])
 
     prediction_proba = best_xgb.predict_proba(input_scaled)[:, 1][0]
-    prediction = (prediction_proba > best_threshold).astype(int)
+    risk_level = "High Risk!" if prediction_proba > best_threshold else "Low Risk!"
+    risk_color = "red" if prediction_proba > best_threshold else "green"
     prediction_rounded = round(prediction_proba, 4)
 
-    return render_template('result.html', prediction=prediction_rounded, youden_index=best_threshold)
+    return render_template('result.html', prediction=prediction_rounded, youden_index=best_threshold, risk_level=risk_level, risk_color=risk_color)
 
 if __name__ == '__main__':
     app.run(debug=True)
