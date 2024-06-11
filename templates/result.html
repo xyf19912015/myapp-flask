@@ -18,6 +18,8 @@ Created on Thu May 30 17:21:14 2024
         .result { font-size: 24px; text-align: center; margin-top: 20px; }
         .home-link { display: block; text-align: center; margin-top: 20px; }
         .home-link a { text-decoration: none; color: #007bff; font-size: 18px; }
+        .high-risk { color: red; }
+        .low-risk { color: green; }
     </style>
 </head>
 <body>
@@ -25,7 +27,8 @@ Created on Thu May 30 17:21:14 2024
         <h1>Prediction Result</h1>
         <div class="result">
             Probability of Persistent CAA: {{ prediction }}<br>
-            Youden Index: {{ youden_index }}
+            Youden Index: {{ youden_index }}<br>
+            <span class="{{ 'high-risk' if risk_color == 'red' else 'low-risk' }}">{{ risk_level }}</span>
         </div>
         <div class="home-link">
             <a href="/">Back to Home</a>
