@@ -10,8 +10,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import confusion_matrix, roc_curve
+from sklearn.model_selection import GridSearchCV
 from xgboost import XGBClassifier
 import requests
 import io
@@ -24,15 +23,18 @@ random.seed(random_state)
 np.random.seed(random_state)
 
 def calculate_youden_index(y_true, y_proba):
+    from sklearn.metrics import roc_curve
     fpr, tpr, thresholds = roc_curve(y_true, y_proba)
     youden_index = tpr - fpr
     best_threshold = thresholds[np.argmax(youden_index)]
-    return best_threshold
+    best_youden_index = np.max(youden_index)
+    return best_threshold, best_youden_index
 
 def cross_validated_youden_index(X, y, model, cv=5):
     from sklearn.model_selection import StratifiedKFold
     skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
     thresholds = []
+    youden_indices = []
     
     for train_index, test_index in skf.split(X, y):
         X_train, X_test = X[train_index], X[test_index]
@@ -40,18 +42,11 @@ def cross_validated_youden_index(X, y, model, cv=5):
         
         model.fit(X_train, y_train)
         y_proba = model.predict_proba(X_test)[:, 1]
-        best_threshold = calculate_youden_index(y_test, y_proba)
+        best_threshold, best_youden_index = calculate_youden_index(y_test, y_proba)
         thresholds.append(best_threshold)
+        youden_indices.append(best_youden_index)
     
-    return np.mean(thresholds)
-
-def select_features(X, y):
-    from sklearn.feature_selection import RFECV
-    xgb_classifier = XGBClassifier(random_state=random_state)
-    rfecv = RFECV(estimator=xgb_classifier, step=1, cv=5, scoring='roc_auc')
-    rfecv.fit(X, y)
-    selected_features = X.columns[rfecv.support_]
-    return selected_features
+    return np.mean(thresholds), np.mean(youden_indices)
 
 def train_model():
     url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast3.csv'
@@ -60,9 +55,6 @@ def train_model():
 
     X = data.drop('PCAA', axis=1)
     y = data['PCAA']
-
-    selected_features = select_features(X, y)
-    X = X[selected_features]
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
@@ -89,11 +81,11 @@ def train_model():
 
     best_xgb = grid_search.best_estimator_
 
-    best_threshold = cross_validated_youden_index(X_resampled, y_resampled, best_xgb)
+    best_threshold, best_youden_index = cross_validated_youden_index(X_resampled, y_resampled, best_xgb)
 
-    return scaler, best_xgb, selected_features, X.columns, best_threshold
+    return scaler, best_xgb, X.columns, best_threshold, best_youden_index
 
-scaler, best_xgb, selected_features, original_columns, best_threshold = train_model()
+scaler, best_xgb, feature_names, best_threshold, best_youden_index = train_model()
 
 @app.route('/')
 def home():
@@ -101,48 +93,48 @@ def home():
         'Num of involved CAs': 'Number of Involved Coronary Arteries, n',
         'Zmax of initial CALs': 'Zmax of initial CALs',
         'Age': 'Age of onset, years',
-        'DF': 'Duration of fever, day',
+        'IGT': 'Day of first time to use IVIG, day',
         'AST': 'Aspartate aminotransferase, U/L',
         'WBC': 'White blood cell, 10^9/L',
         'PLT': 'Platelets',
         'HB': 'Hemoglobin, g/dL'
     }
-    return render_template('index.html', features=selected_features, annotations=annotations)
+    return render_template('index.html', features=annotations.keys(), annotations=annotations)
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         input_features = []
-        for feature in selected_features:
-            value = float(request.form[feature])
-            if feature == 'Zmax of initial CALs':
-                if value < 2:
-                    value = 0
-                elif 2 <= value < 2.5:
-                    value = 1
-                elif 2.5 <= value < 5:
-                    value = 2
-                elif 5 <= value < 10:
-                    value = 3
-                else:
-                    value = 4
-            input_features.append(value)
+        for feature in feature_names:
+            if feature in request.form:
+                value = float(request.form[feature])
+                if feature == 'Zmax of initial CALs':
+                    if value < 2:
+                        value = 0
+                    elif 2 <= value < 2.5:
+                        value = 1
+                    elif 2.5 <= value < 5:
+                        value = 2
+                    elif 5 <= value < 10:
+                        value = 3
+                    else:
+                        value = 4
+                input_features.append(value)
+            else:
+                input_features.append(0.0)  # 对于缺少的特征，用0填充
     except KeyError as e:
         return f"Error: Missing input for feature: {e.args[0]}"
 
-    input_df = pd.DataFrame([input_features], columns=selected_features)
+    input_df = pd.DataFrame([input_features], columns=feature_names)
 
-    aligned_input_df = pd.DataFrame(np.zeros((1, len(original_columns))), columns=original_columns)
-    aligned_input_df[selected_features] = input_df
-
-    input_scaled = scaler.transform(aligned_input_df[selected_features])
+    input_scaled = scaler.transform(input_df)
 
     prediction_proba = best_xgb.predict_proba(input_scaled)[:, 1][0]
     risk_level = "High Risk!" if prediction_proba > best_threshold else "Low Risk!"
     risk_color = "red" if prediction_proba > best_threshold else "green"
     prediction_rounded = round(prediction_proba, 4)
 
-    return render_template('result.html', prediction=prediction_rounded, youden_index=best_threshold, risk_level=risk_level, risk_color=risk_color)
+    return render_template('result.html', prediction=prediction_rounded, youden_index=best_youden_index, best_threshold=best_threshold, risk_level=risk_level, risk_color=risk_color)
 
 if __name__ == '__main__':
     app.run(debug=True)
