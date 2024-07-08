@@ -26,8 +26,7 @@ Created on Thu May 30 17:21:14 2024
     <div class="container">
         <h1>Prediction Result</h1>
         <div class="result">
-            Probability of Persistent CAA: {{ prediction }}<br>
-            Youden Index: {{ youden_index }}<br>
+            Probability of Persistent CAAs: {{ prediction }}<br>
             Best Threshold: {{ best_threshold }}<br>
             <span class="{{ 'high-risk' if risk_color == 'red' else 'low-risk' }}">{{ risk_level }}</span>
         </div>
