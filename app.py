@@ -48,11 +48,34 @@ def cross_validated_youden_index(X, y, model, cv=5):
     
     return np.mean(thresholds), np.mean(youden_indices)
 
-def train_model():
+def load_data():
     url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/KDlast3.csv'
-    response = requests.get(url)
-    data = pd.read_csv(io.StringIO(response.content.decode('utf-8')), encoding='gbk')
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # 检查请求是否成功
+        data = pd.read_csv(io.StringIO(response.content.decode('utf-8')), encoding='gbk')
+        
+        if data.empty:
+            raise ValueError("Loaded data is empty.")
+        
+        return data
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error occurred: {e}")
+    except pd.errors.ParserError as e:
+        print(f"Parser error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    
+    return None
 
+def train_model():
+    data = load_data()
+    if data is None:
+        print("Failed to load data. Model training cannot proceed.")
+        return None, None, None, None, None
+
+    # 特征和标签
     X = data.drop('PCAA', axis=1)
     y = data['PCAA']
 
@@ -85,6 +108,7 @@ def train_model():
 
     return scaler, best_xgb, X.columns, best_threshold, best_youden_index
 
+# 训练模型并获取参数
 scaler, best_xgb, feature_names, best_threshold, best_youden_index = train_model()
 
 @app.route('/')
@@ -126,7 +150,6 @@ def predict():
         return f"Error: Missing input for feature: {e.args[0]}"
 
     input_df = pd.DataFrame([input_features], columns=feature_names)
-
     input_scaled = scaler.transform(input_df)
 
     prediction_proba = best_xgb.predict_proba(input_scaled)[:, 1][0]
