@@ -114,7 +114,7 @@ scaler, best_xgb, feature_names, best_threshold, best_youden_index = train_model
 @app.route('/')
 def home():
     annotations = {
-        'Num of involved CAs': 'Number of Involved Coronary Arteries, n',
+        'No of involved CAs': 'Number of Involved Coronary Arteries, n',
         'Zmax of initial CALs': 'Zmax of initial CALs',
         'Age': 'Age of onset, years',
         'IGT': 'Day of first time to use IVIG, day',
