@@ -11,7 +11,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import GridSearchCV
-from xgboost import XGBClassifier
+from catboost import CatBoostClassifier
 import requests
 import io
 import random
@@ -85,31 +85,27 @@ def train_model():
     smote = SMOTE(sampling_strategy=0.5, random_state=random_state)
     X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
 
-    xgb_classifier = XGBClassifier(random_state=random_state)
+    catboost_classifier = CatBoostClassifier(random_seed=random_state, verbose=0)
 
     param_grid = {
-        'n_estimators': [300],
-        'learning_rate': [0.05],
-        'max_depth': [5],
-        'min_child_weight': [1],
-        'gamma': [0.1],
-        'subsample': [0.6],
-        'colsample_bytree': [1.0],
-        'reg_lambda': [1.0],
-        'reg_alpha': [0.1]
+        'iterations': [200],
+        'learning_rate': [0.1],
+        'depth': [5],
+        'l2_leaf_reg': [1],
+        'border_count': [32]
     }
 
-    grid_search = GridSearchCV(estimator=xgb_classifier, param_grid=param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
+    grid_search = GridSearchCV(estimator=catboost_classifier, param_grid=param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
     grid_search.fit(X_resampled, y_resampled)
 
-    best_xgb = grid_search.best_estimator_
+    best_catboost = grid_search.best_estimator_
 
-    best_threshold, best_youden_index = cross_validated_youden_index(X_resampled, y_resampled, best_xgb)
+    best_threshold, best_youden_index = cross_validated_youden_index(X_resampled, y_resampled, best_catboost)
 
-    return scaler, best_xgb, X.columns, best_threshold, best_youden_index
+    return scaler, best_catboost, X.columns, best_threshold, best_youden_index
 
 # 训练模型并获取参数
-scaler, best_xgb, feature_names, best_threshold, best_youden_index = train_model()
+scaler, best_catboost, feature_names, best_threshold, best_youden_index = train_model()
 
 @app.route('/')
 def home():
@@ -152,7 +148,7 @@ def predict():
     input_df = pd.DataFrame([input_features], columns=feature_names)
     input_scaled = scaler.transform(input_df)
 
-    prediction_proba = best_xgb.predict_proba(input_scaled)[:, 1][0]
+    prediction_proba = best_catboost.predict_proba(input_scaled)[:, 1][0]
     risk_level = "High Risk!" if prediction_proba > best_threshold else "Low Risk!"
     risk_color = "red" if prediction_proba > best_threshold else "green"
     prediction_rounded = round(prediction_proba, 4)
