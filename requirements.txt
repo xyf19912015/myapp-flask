@@ -11,3 +11,4 @@ requests
 gunicorn
 waitress
 matplotlib
+catboost
