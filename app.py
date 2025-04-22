@@ -75,7 +75,7 @@ def train_model():
     best_catboost = grid_search.best_estimator_
     
     # 直接指定固定的最佳阈值
-    best_threshold = 0.2677
+    best_threshold = 0.5581
     best_youden_index = None  # 可选：如果需要，可以设为 None 或其他有效值
 
     return scaler, best_catboost, X.columns, best_threshold, best_youden_index
