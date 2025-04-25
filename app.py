@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from catboost import CatBoostClassifier
 import requests
 import io
@@ -43,6 +43,31 @@ def load_data():
     
     return None
 
+def calculate_youden_index(y_true, y_proba):
+    from sklearn.metrics import roc_curve
+    fpr, tpr, thresholds = roc_curve(y_true, y_proba)
+    youden_index = tpr - fpr
+    best_threshold = thresholds[np.argmax(youden_index)]
+    best_youden_index = np.max(youden_index)
+    return best_threshold, best_youden_index
+
+def cross_validated_youden_index(X, y, model, cv=5):
+    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
+    thresholds = []
+    youden_indices = []
+    
+    for train_index, test_index in skf.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        
+        model.fit(X_train, y_train)
+        y_proba = model.predict_proba(X_test)[:, 1]
+        best_threshold, best_youden_index = calculate_youden_index(y_test, y_proba)
+        thresholds.append(best_threshold)
+        youden_indices.append(best_youden_index)
+    
+    return np.mean(thresholds), np.mean(youden_indices)
+
 def train_model():
     data = load_data()
     if data is None:
@@ -73,10 +98,9 @@ def train_model():
     grid_search.fit(X_resampled, y_resampled)
 
     best_catboost = grid_search.best_estimator_
-    
-    # 直接指定固定的最佳阈值
-    best_threshold = 0.5581
-    best_youden_index = None  # 可选：如果需要，可以设为 None 或其他有效值
+
+    # 通过交叉验证计算最佳阈值和 Youden 指数
+    best_threshold, best_youden_index = cross_validated_youden_index(X_resampled, y_resampled, best_catboost)
 
     return scaler, best_catboost, X.columns, best_threshold, best_youden_index
 
