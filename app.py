@@ -59,14 +59,19 @@ def train_model():
     smote = SMOTE(sampling_strategy=0.5, random_state=random_state)
     X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
 
-    catboost_classifier = CatBoostClassifier(random_seed=random_state, verbose=0)
+    catboost_classifier = CatBoostClassifier(random_seed=random_state, verbose=0,eval_metric='logloss')
 
+    
     param_grid = {
-        'iterations': [200],
-        'learning_rate': [0.1],
-        'depth': [5],
-        'l2_leaf_reg': [1],
-        'border_count': [32]
+    'n_estimators': [400],
+    'learning_rate': [0.01],
+    'max_depth': [6],
+    'min_child_weight': [1],
+    'gamma': [0.1],
+    'subsample': [1.0],
+    'colsample_bytree': [0.5],
+    'reg_alpha': [0.01],
+    'reg_lambda': [0.1]
     }
 
     grid_search = GridSearchCV(estimator=catboost_classifier, param_grid=param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
@@ -75,7 +80,7 @@ def train_model():
     best_catboost = grid_search.best_estimator_
     
     # 直接指定固定的最佳阈值
-    best_threshold = 0.5581
+    best_threshold = 0.2283
     best_youden_index = None  # 可选：如果需要，可以设为 None 或其他有效值
 
     return scaler, best_catboost, X.columns, best_threshold, best_youden_index
@@ -90,7 +95,6 @@ def home():
         'Zmax of initial CALs': 'Zmax of initial CALs',
         'Age': 'Age of onset, years',
         'IGT': 'Day of first time to use IVIG, day',
-        'AST': 'Aspartate aminotransferase, U/L',
         'WBC': 'White blood cell, 10^9/L',
         'PLT': 'Platelets',
         'HB': 'Hemoglobin, g/dL'
