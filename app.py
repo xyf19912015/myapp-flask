@@ -11,7 +11,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import GridSearchCV
-from catboost import CatBoostClassifier
+from xgboost import XGBClassifier  # 修改为 XGBoost
 import requests
 import io
 import random
@@ -59,34 +59,34 @@ def train_model():
     smote = SMOTE(sampling_strategy=0.5, random_state=random_state)
     X_resampled, y_resampled = smote.fit_resample(X_scaled, y)
 
-    catboost_classifier = CatBoostClassifier(random_seed=random_state, verbose=0,eval_metric='logloss')
+    # 使用 XGBoost 进行建模
+    xgb_classifier = XGBClassifier(random_state=random_state, eval_metric='logloss')
 
-    
     param_grid = {
-    'n_estimators': [400],
-    'learning_rate': [0.01],
-    'max_depth': [6],
-    'min_child_weight': [1],
-    'gamma': [0.1],
-    'subsample': [1.0],
-    'colsample_bytree': [0.5],
-    'reg_alpha': [0.01],
-    'reg_lambda': [0.1]
+        'n_estimators': [400],
+        'learning_rate': [0.01],
+        'max_depth': [6],
+        'min_child_weight': [1],
+        'gamma': [0.1],
+        'subsample': [1.0],
+        'colsample_bytree': [0.5],
+        'reg_alpha': [0.01],
+        'reg_lambda': [0.1]
     }
 
-    grid_search = GridSearchCV(estimator=catboost_classifier, param_grid=param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
+    grid_search = GridSearchCV(estimator=xgb_classifier, param_grid=param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
     grid_search.fit(X_resampled, y_resampled)
 
-    best_catboost = grid_search.best_estimator_
+    best_xgb = grid_search.best_estimator_
     
     # 直接指定固定的最佳阈值
     best_threshold = 0.2283
     best_youden_index = None  # 可选：如果需要，可以设为 None 或其他有效值
 
-    return scaler, best_catboost, X.columns, best_threshold, best_youden_index
+    return scaler, best_xgb, X.columns, best_threshold, best_youden_index
 
 # 训练模型并获取参数
-scaler, best_catboost, feature_names, best_threshold, best_youden_index = train_model()
+scaler, best_xgb, feature_names, best_threshold, best_youden_index = train_model()
 
 @app.route('/')
 def home():
@@ -128,7 +128,7 @@ def predict():
     input_df = pd.DataFrame([input_features], columns=feature_names)
     input_scaled = scaler.transform(input_df)
 
-    prediction_proba = best_catboost.predict_proba(input_scaled)[:, 1][0]
+    prediction_proba = best_xgb.predict_proba(input_scaled)[:, 1][0]
     risk_level = "High Risk!" if prediction_proba > best_threshold else "Low Risk!"
     risk_color = "red" if prediction_proba > best_threshold else "green"
     prediction_rounded = round(prediction_proba, 4)
