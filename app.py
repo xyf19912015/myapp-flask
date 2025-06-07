@@ -95,9 +95,10 @@ def home():
         'Zmax of initial CALs': 'Zmax of initial CALs',
         'Age': 'Age of onset, years',
         'DF': 'Duration of Fever, days',
-        'WBC': 'White blood cell, 10^9/L',
+        'AST': 'Aspartate Aminotransferase Level (U/L)',
         'PLT': 'Platelets',
-        'HB': 'Hemoglobin, g/dL'
+        'HB': 'Hemoglobin, g/dL',
+        
     }
     return render_template('index.html', features=annotations.keys(), annotations=annotations)
 
