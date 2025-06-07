@@ -94,7 +94,7 @@ def home():
         'No. of involved CAs': 'Number of Involved Coronary Arteries, n',
         'Zmax of initial CALs': 'Zmax of initial CALs',
         'Age': 'Age of onset, years',
-        'IGT': 'Day of first time to use IVIG, day',
+        'DF': 'Duration of Fever, days',
         'WBC': 'White blood cell, 10^9/L',
         'PLT': 'Platelets',
         'HB': 'Hemoglobin, g/dL'
