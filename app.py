@@ -29,7 +29,26 @@ FEATURES = [
     "IVIG-resistant Kawasaki disease"
 ]
 
-DATA_PATH = "Development_setHCHmodel.csv"  # CSV 文件路径，需放在 Flask 项目同目录或可访问路径
+def load_data():
+    url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/Development_setHCHmodel.csv'
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # 检查请求是否成功
+        data = pd.read_csv(io.StringIO(response.content.decode('utf-8')), encoding='gbk')
+        
+        if data.empty:
+            raise ValueError("Loaded data is empty.")
+        
+        return data
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error occurred: {e}")
+    except pd.errors.ParserError as e:
+        print(f"Parser error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    
+    return None
 
 # ===================== 加载数据 =====================
 def load_data():
