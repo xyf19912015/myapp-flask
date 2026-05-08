@@ -106,7 +106,7 @@ def predict():
         input_selected = input_scaled[:, selected_idx]
 
         prob = best_rf.predict_proba(input_selected)[:, 1][0]
-        threshold = 0.2283  # 可以使用约登指数阈值或自定义
+        threshold = 0.3242  # 可以使用约登指数阈值或自定义
         risk = "High Risk!" if prob > threshold else "Low Risk!"
         color = "red" if prob > threshold else "green"
 
