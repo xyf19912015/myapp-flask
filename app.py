@@ -14,13 +14,15 @@ from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import ADASYN
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
+import requests
+import io
 
 # ===================== 基础设置 =====================
 app = Flask(__name__)
 random_state = 42
 np.random.seed(random_state)
 
-# ===================== 特征与数据路径 =====================
+# ===================== 特征列表 =====================
 FEATURES = [
     "Maximum baseline coronary artery Z-score",
     "Number of involved coronary arteries",
@@ -29,30 +31,13 @@ FEATURES = [
     "IVIG-resistant Kawasaki disease"
 ]
 
+# ===================== 加载数据函数 =====================
 def load_data():
     url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/Development_setHCHmodel.csv'
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # 检查请求是否成功
-        data = pd.read_csv(io.StringIO(response.content.decode('utf-8')), encoding='gbk')
-        
-        if data.empty:
-            raise ValueError("Loaded data is empty.")
-        
-        return data
-    except requests.exceptions.HTTPError as e:
-        print(f"HTTP error occurred: {e}")
-    except pd.errors.ParserError as e:
-        print(f"Parser error: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    
-    return None
-
-# ===================== 加载数据 =====================
-def load_data():
-    data = pd.read_csv(DATA_PATH, encoding='gbk')
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    data = pd.read_csv(io.StringIO(response.content.decode('utf-8')), encoding='gbk')
     X = data[FEATURES]
     y = data['PCAA']
     return X, y
