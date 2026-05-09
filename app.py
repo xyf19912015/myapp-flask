@@ -4,7 +4,8 @@ Created on Fri May  8 22:13:21 2026
 
 @author: Administrator
 Flask + Random Forest + ADASYN
-使用固定阈值 0.3242
+Maximum baseline coronary artery Z-score 特征做区间转换
+固定阈值 0.3242
 """
 
 from flask import Flask, request, render_template
@@ -22,7 +23,7 @@ app = Flask(__name__)
 random_state = 42
 np.random.seed(random_state)
 
-# ===================== 特征与注释 =====================
+# ===================== 特征和注释 =====================
 FEATURES = [
     "Maximum baseline coronary artery Z-score",
     "Number of involved coronary arteries",
@@ -31,7 +32,6 @@ FEATURES = [
     "IVIG-resistant Kawasaki disease"
 ]
 
-# annotations 用于模板显示
 annotations = {
     "Maximum baseline coronary artery Z-score": "Maximum baseline coronary artery Z-score",
     "Number of involved coronary arteries": "Number of involved coronary arteries",
@@ -81,28 +81,42 @@ def train_model():
 
     return scaler, best_rf, selected_idx
 
-# 训练模型
+# 训练一次模型
 scaler, best_rf, selected_idx = train_model()
 
 # ===================== Flask 路由 =====================
 @app.route('/')
 def home():
-    # 渲染输入表单，传 features 和 annotations
+    # 渲染 index.html，传 features 和 annotations
     return render_template('index.html', features=FEATURES, annotations=annotations)
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # 获取前端输入
-        input_data = []
-        for feat in FEATURES:
-            value = float(request.form.get(feat, 0.0))
-            input_data.append(value)
+        input_features = []
 
-        # 转换为数组并标准化
-        input_array = np.array(input_data).reshape(1, -1)
-        input_scaled = scaler.transform(input_array)
-        input_selected = input_scaled[:, selected_idx]
+        for feature in FEATURES:
+            value = float(request.form.get(feature, 0.0))
+
+            # 特殊处理 Maximum baseline coronary artery Z-score
+            if feature == "Maximum baseline coronary artery Z-score":
+                if value < 2:
+                    value = 0
+                elif 2 <= value < 2.5:
+                    value = 1
+                elif 2.5 <= value < 5:
+                    value = 2
+                elif 5 <= value < 10:
+                    value = 3
+                else:
+                    value = 4
+
+            input_features.append(value)
+
+        # 构造 DataFrame 并标准化
+        input_df = pd.DataFrame([input_features], columns=FEATURES)
+        input_scaled = scaler.transform(input_df)
+        input_selected = input_scaled[:, selected_idx]  # 全部特征直接用
 
         # 预测概率
         prob = best_rf.predict_proba(input_selected)[:, 1][0]
@@ -112,13 +126,13 @@ def predict():
         risk = "High Risk!" if prob > threshold else "Low Risk!"
         color = "red" if prob > threshold else "green"
 
-        # 返回结果
         return render_template(
             'result.html',
             prediction=round(prob, 4),
             risk_level=risk,
             risk_color=color
         )
+
     except Exception as e:
         return f"Error: {e}"
 
