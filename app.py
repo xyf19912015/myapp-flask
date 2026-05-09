@@ -22,7 +22,7 @@ app = Flask(__name__)
 random_state = 42
 np.random.seed(random_state)
 
-# ===================== 特征列表 =====================
+# ===================== 特征与注释 =====================
 FEATURES = [
     "Maximum baseline coronary artery Z-score",
     "Number of involved coronary arteries",
@@ -31,7 +31,16 @@ FEATURES = [
     "IVIG-resistant Kawasaki disease"
 ]
 
-# ===================== 加载数据函数 =====================
+# annotations 用于模板显示
+annotations = {
+    "Maximum baseline coronary artery Z-score": "Maximum baseline coronary artery Z-score",
+    "Number of involved coronary arteries": "Number of involved coronary arteries",
+    "Day of initial IVIG treatment, days": "Day of initial IVIG treatment, days",
+    "Age, years": "Age, years",
+    "IVIG-resistant Kawasaki disease": "IVIG-resistant Kawasaki disease"
+}
+
+# ===================== 加载数据 =====================
 def load_data():
     url = 'https://raw.githubusercontent.com/xyf19912015/myapp-flask/master/Development_setHCHmodel.csv'
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -72,13 +81,14 @@ def train_model():
 
     return scaler, best_rf, selected_idx
 
+# 训练模型
 scaler, best_rf, selected_idx = train_model()
 
 # ===================== Flask 路由 =====================
 @app.route('/')
 def home():
-    # 渲染输入表单
-    return render_template('index.html', features=FEATURES)
+    # 渲染输入表单，传 features 和 annotations
+    return render_template('index.html', features=FEATURES, annotations=annotations)
 
 @app.route('/predict', methods=['POST'])
 def predict():
